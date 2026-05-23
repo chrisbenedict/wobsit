@@ -1,0 +1,33 @@
+---
+// contact rows. add new links by appending to this array.
+type Link = { label: string; val: string; href: string; external?: boolean };
+
+const links: Link[] = [
+  {
+    label: 'email',
+    val: 'chris3benedict@gmail.com',
+    href: 'mailto:chris3benedict@gmail.com',
+  },
+  {
+    label: 'linkedin',
+    val: '/in/chris3benedict',
+    href: 'https://www.linkedin.com/in/chris3benedict',
+    external: true,
+  },
+];
+---
+<section class="panel" data-tab="contact" role="tabpanel">
+  <h2>contact</h2>
+  <div class="links">
+    {links.map(l => (
+      <a
+        href={l.href}
+        target={l.external ? '_blank' : undefined}
+        rel={l.external ? 'noopener noreferrer' : undefined}
+      >
+        <span><span class="label">{l.label}</span><span class="val">{l.val}</span></span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    ))}
+  </div>
+</section>

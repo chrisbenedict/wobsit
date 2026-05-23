@@ -1,0 +1,19 @@
+---
+// single source of truth for tabs. mirrors keyMap in src/scripts/site.js
+const tabs = [
+  { name: 'home',    key: 1 },
+  { name: 'about',   key: 2 },
+  { name: 'contact', key: 3 },
+];
+---
+<nav class="tabs" role="tablist" aria-label="sections">
+  {tabs.map((t, i) => (
+    <button
+      role="tab"
+      data-tab={t.name}
+      aria-selected={i === 0 ? 'true' : 'false'}
+    >
+      <span class="key">[{t.key}]</span>{t.name}
+    </button>
+  ))}
+</nav>

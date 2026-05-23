@@ -1,0 +1,23 @@
+---
+// rows on the about tab. null v → rendered as "— tbd —".
+// add / fill in entries here as the site grows.
+const rows: { k: string; v: string | null }[] = [
+  { k: 'name',    v: 'chris benedict' },
+  { k: 'based',   v: null },
+  { k: 'doing',   v: null },
+  { k: 'into',    v: null },
+  { k: 'reading', v: null },
+];
+---
+<section class="panel" data-tab="about" role="tabpanel">
+  <h2>about</h2>
+  {rows.map(r => (
+    <div class="row">
+      <div class="k">{r.k}</div>
+      <div class="v">
+        {r.v ? r.v : <span class="todo">— tbd —</span>}
+      </div>
+    </div>
+  ))}
+  <p class="muted-note">// section under construction. fill it in.</p>
+</section>

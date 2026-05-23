@@ -1,0 +1,43 @@
+name: now-playing
+
+on:
+  schedule:
+    # every 30 minutes — GitHub may delay cron under load
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+# only one run at a time so we don't push over ourselves
+concurrency:
+  group: now-playing
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: fetch + write now-playing.json
+        env:
+          SPOTIFY_CLIENT_ID:     ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
+        run: node scripts/update-now-playing.mjs
+
+      - name: commit if changed
+        run: |
+          if [[ -n "$(git status --porcelain public/now-playing.json)" ]]; then
+            git config user.name  'github-actions[bot]'
+            git config user.email 'github-actions[bot]@users.noreply.github.com'
+            git add public/now-playing.json
+            git commit -m 'now-playing: update'
+            git push
+          else
+            echo "no diff"
+          fi

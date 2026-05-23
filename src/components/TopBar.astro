@@ -1,0 +1,11 @@
+---
+interface Props {
+  host?: string;
+}
+const { host = 'chrisbenedict.me' } = Astro.props;
+---
+<div class="topbar">
+  <div class="left">{host}</div>
+  <div class="mid"><span id="time">--:--:--</span></div>
+  <div class="right"><span id="loc">—</span></div>
+</div>
