@@ -1,8 +1,7 @@
 ---
-import { execSync } from 'node:child_process';
+import { readFileSync, existsSync } from 'node:fs';
 
 // ──────── about rows ────────
-// edit `v` strings to fill in. null → renders as "— tbd —".
 const rows: { k: string; v: string | null }[] = [
   { k: 'name',    v: 'chris benedict' },
   { k: 'based',   v: null },
@@ -11,44 +10,47 @@ const rows: { k: string; v: string | null }[] = [
   { k: 'reading', v: null },
 ];
 
-// ──────── commit history (build-time `git log`) ────────
-// requires git history at build time. for the production GitHub Action,
-// .github/workflows/deploy.yml sets fetch-depth: 0 so this works in CI.
-type Commit = { hash: string; subject: string; iso: string };
+// ──────── contributions heatmap ────────
+// reads src/data/contributions.json (refreshed at build time by
+// scripts/fetch-contributions.mjs — see .github/workflows/deploy.yml)
+type Day  = { c: number; l: 0 | 1 | 2 | 3 | 4; d: string };
+type Data = { total: number; weeks: Day[][]; fetched_at: string; source: string };
 
-const REPO_URL = 'https://github.com/chrisbenedict/wobsit';
-const LIMIT = 8;
-
-let commits: Commit[] = [];
-try {
-  // %x1f is the ASCII unit separator — safe delimiter that won't appear
-  // in commit subjects.
-  const raw = execSync(
-    `git log -n ${LIMIT} --pretty=format:%h%x1f%s%x1f%aI`,
-    { encoding: 'utf8' }
-  );
-  commits = raw
-    .trim()
-    .split('\n')
-    .filter(Boolean)
-    .map(line => {
-      const [hash, subject, iso] = line.split('\x1f');
-      return { hash, subject, iso };
-    });
-} catch {
-  // no git, no history, no shame — render an empty placeholder
+let contrib: Data | null = null;
+const dataPath = 'src/data/contributions.json';
+if (existsSync(dataPath)) {
+  try { contrib = JSON.parse(readFileSync(dataPath, 'utf8')); } catch {}
 }
 
-function relTime(iso: string): string {
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return '';
-  const s = Math.max(0, Math.floor((Date.now() - then) / 1000));
-  if (s < 60)      return `${s}s ago`;
-  if (s < 3600)    return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400)   return `${Math.floor(s / 3600)}h ago`;
-  if (s < 604800)  return `${Math.floor(s / 86400)}d ago`;
-  if (s < 2592000) return `${Math.floor(s / 604800)}w ago`;
-  return `${Math.floor(s / 2592000)}mo ago`;
+// derive month labels positioned by the column they start in.
+const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+let monthLabels: { col: number; label: string }[] = [];
+if (contrib) {
+  let prev = -1;
+  contrib.weeks.forEach((week, idx) => {
+    const first = week[0];
+    if (!first) return;
+    const m = new Date(first.d).getUTCMonth();
+    if (m !== prev) {
+      monthLabels.push({ col: idx + 1, label: MONTHS[m] });
+      prev = m;
+    }
+  });
+  // drop the first label if it'd sit on top of the first column of the prior month's tail
+  if (monthLabels.length > 1 && monthLabels[0].col < 2) monthLabels = monthLabels.slice(1);
+}
+
+const startDate = contrib?.weeks[0]?.[0]?.d;
+const endDate   = contrib ? (() => {
+  const lastWeek = contrib.weeks[contrib.weeks.length - 1];
+  return lastWeek[lastWeek.length - 1]?.d;
+})() : null;
+
+function fmtRange(a?: string, b?: string | null): string {
+  if (!a || !b) return '';
+  const fa = new Date(a), fb = new Date(b);
+  const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${m[fa.getUTCMonth()]} ${fa.getUTCFullYear()} → ${m[fb.getUTCMonth()]} ${fb.getUTCFullYear()}`;
 }
 ---
 <section class="panel" data-tab="about" role="tabpanel">
@@ -64,21 +66,49 @@ function relTime(iso: string): string {
   ))}
   <p class="muted-note">// section under construction. fill it in.</p>
 
-  {commits.length > 0 && (
-    <div class="commits">
-      <div class="commits-label">commit history</div>
-      <pre class="commits-cmd">$ git log -n {LIMIT} --oneline</pre>
-      <ul class="commits-list">
-        {commits.map(c => (
-          <li>
-            <span class="hash">
-              <a href={`${REPO_URL}/commit/${c.hash}`} target="_blank" rel="noopener noreferrer">{c.hash}</a>
-            </span>
-            <span class="subject">{c.subject}</span>
-            <span class="when">{relTime(c.iso)}</span>
-          </li>
-        ))}
-      </ul>
+  {contrib && (
+    <div class="contrib">
+      <div class="contrib-head">
+        <div class="contrib-label">git activity</div>
+        <div class="contrib-range">{fmtRange(startDate, endDate)}</div>
+      </div>
+
+      <div class="contrib-summary">
+        <span class="contrib-total"><b>{contrib.total.toLocaleString()}</b> contributions in the last year</span>
+        <span class="contrib-legend">
+          <span class="contrib-legend-label">less</span>
+          <span class="contrib-cell level-0" aria-hidden="true"></span>
+          <span class="contrib-cell level-1" aria-hidden="true"></span>
+          <span class="contrib-cell level-2" aria-hidden="true"></span>
+          <span class="contrib-cell level-3" aria-hidden="true"></span>
+          <span class="contrib-cell level-4" aria-hidden="true"></span>
+          <span class="contrib-legend-label">more</span>
+        </span>
+      </div>
+
+      <div class="contrib-scroll">
+        <div class="contrib-months" style={`--cols: ${contrib.weeks.length}`}>
+          {monthLabels.map(m => (
+            <span class="contrib-month" style={`grid-column: ${m.col}`}>{m.label}</span>
+          ))}
+        </div>
+        <div
+          class="contrib-grid"
+          role="img"
+          aria-label={`${contrib.total} GitHub contributions in the last year`}
+        >
+          {contrib.weeks.map(week => (
+            <div class="contrib-col">
+              {week.map(day => (
+                <span
+                  class={`contrib-cell level-${day.l}`}
+                  title={`${day.c} contribution${day.c === 1 ? '' : 's'} · ${day.d}`}
+                ></span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )}
 </section>

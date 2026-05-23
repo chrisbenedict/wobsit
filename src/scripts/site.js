@@ -95,14 +95,27 @@
     if (el) el.textContent = value;
   }
 
+  // spelled-out units — uppercase single-letter abbreviations are
+  // ambiguous in JetBrains Mono ("1D" reads like "10").
   function relTime(iso) {
     if (!iso) return '';
     const then = new Date(iso).getTime();
     if (Number.isNaN(then)) return '';
     const s = Math.max(0, Math.floor((Date.now() - then) / 1000));
-    if (s < 60)    return `${s}s ago`;
-    if (s < 3600)  return `${Math.floor(s / 60)}m ago`;
-    if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-    return `${Math.floor(s / 86400)}d ago`;
+    if (s < 45)        return 'just now';
+    if (s < 3600) {
+      const m = Math.max(1, Math.floor(s / 60));
+      return m === 1 ? '1 min ago' : `${m} min ago`;
+    }
+    if (s < 86400) {
+      const h = Math.floor(s / 3600);
+      return h === 1 ? '1 hr ago' : `${h} hrs ago`;
+    }
+    if (s < 172800) return 'yesterday';
+    if (s < 604800) return `${Math.floor(s / 86400)} days ago`;
+    if (s < 1209600) return 'last week';
+    if (s < 2592000) return `${Math.floor(s / 604800)} weeks ago`;
+    const mo = Math.floor(s / 2592000);
+    return mo === 1 ? '1 month ago' : `${mo} months ago`;
   }
 })();

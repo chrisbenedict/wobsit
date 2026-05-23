@@ -197,74 +197,100 @@ main {
 .row .v          { color: var(--fg); }
 .row .v .todo    { color: var(--muted); font-style: italic; }
 
-/* ────── commit history (about) ────── */
-.commits {
+/* ────── github contributions heatmap (about) ────── */
+.contrib {
   margin-top: 44px;
-  max-width: 72ch;
+  max-width: 100%;
 }
-.commits-label {
+.contrib-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.contrib-label {
   font-size: 10px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 10px;
 }
-.commits-label::before { content: "// "; color: var(--accent); }
-
-.commits-cmd {
-  font-family: inherit;
-  font-size: 11px;
-  color: var(--muted);
-  background: transparent;
-  padding: 8px 0 6px;
-  border-top: 1px solid var(--line);
-  margin: 0;
-  white-space: pre-wrap;
-}
-.commits-cmd::before { content: "› "; color: var(--accent); }
-
-.commits-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.commits-list li {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 16px;
-  padding: 10px 0;
-  border-top: 1px dashed var(--line);
-  font-size: 13px;
-  align-items: baseline;
-  line-height: 1.4;
-}
-.commits-list li:last-child { border-bottom: 1px solid var(--line); }
-.commits-list .hash {
-  color: var(--accent);
-  font-weight: 500;
-}
-.commits-list .hash::before { content: "["; color: var(--muted); }
-.commits-list .hash::after  { content: "]"; color: var(--muted); }
-.commits-list .hash a {
-  color: inherit;
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color .2s;
-}
-.commits-list .hash a:hover { border-bottom-color: var(--accent); }
-.commits-list .subject { color: var(--fg); overflow: hidden; text-overflow: ellipsis; }
-.commits-list .when {
+.contrib-label::before { content: "// "; color: var(--accent); }
+.contrib-range {
   font-size: 10px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.contrib-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px dashed var(--line);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.contrib-total b      { color: var(--fg); font-weight: 700; }
+.contrib-legend       { display: inline-flex; align-items: center; gap: 5px; }
+.contrib-legend-label { text-transform: uppercase; letter-spacing: 0.2em; font-size: 9px; }
+
+.contrib-scroll {
+  overflow-x: auto;
+  padding: 14px 0 4px;
+  /* scrollbar polish */
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.contrib-months {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 53), 12px);
+  column-gap: 3px;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  margin-bottom: 4px;
+  min-width: max-content;
+}
+.contrib-month {
+  grid-row: 1;
   white-space: nowrap;
 }
 
+.contrib-grid {
+  display: flex;
+  gap: 3px;
+  min-width: max-content;
+}
+.contrib-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.contrib-cell {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+}
+/* red intensity ramp — matches site accent */
+.contrib-cell.level-0 { background: rgba(10, 10, 10, 0.07); }
+.contrib-cell.level-1 { background: rgba(255, 45, 0, 0.28); }
+.contrib-cell.level-2 { background: rgba(255, 45, 0, 0.52); }
+.contrib-cell.level-3 { background: rgba(255, 45, 0, 0.76); }
+.contrib-cell.level-4 { background: rgba(255, 45, 0, 1.00); }
+
+/* legend cells smaller */
+.contrib-legend .contrib-cell { width: 9px; height: 9px; }
+
 @media (max-width: 720px) {
-  .commits-list li        { grid-template-columns: auto 1fr; gap: 8px 12px; }
-  .commits-list .when     { grid-column: 2; font-size: 9px; }
-  .commits-list .subject  { grid-column: 2; }
+  .contrib-head      { flex-direction: column; gap: 4px; align-items: flex-start; }
+  .contrib-summary   { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .contrib-cell      { width: 10px; height: 10px; }
+  .contrib-months    { grid-template-columns: repeat(var(--cols, 53), 10px); }
 }
 
 /* contact links */
