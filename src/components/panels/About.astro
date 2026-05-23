@@ -1,6 +1,8 @@
 ---
-// rows on the about tab. null v → rendered as "— tbd —".
-// add / fill in entries here as the site grows.
+import { execSync } from 'node:child_process';
+
+// ──────── about rows ────────
+// edit `v` strings to fill in. null → renders as "— tbd —".
 const rows: { k: string; v: string | null }[] = [
   { k: 'name',    v: 'chris benedict' },
   { k: 'based',   v: null },
@@ -8,9 +10,50 @@ const rows: { k: string; v: string | null }[] = [
   { k: 'into',    v: null },
   { k: 'reading', v: null },
 ];
+
+// ──────── commit history (build-time `git log`) ────────
+// requires git history at build time. for the production GitHub Action,
+// .github/workflows/deploy.yml sets fetch-depth: 0 so this works in CI.
+type Commit = { hash: string; subject: string; iso: string };
+
+const REPO_URL = 'https://github.com/chrisbenedict/wobsit';
+const LIMIT = 8;
+
+let commits: Commit[] = [];
+try {
+  // %x1f is the ASCII unit separator — safe delimiter that won't appear
+  // in commit subjects.
+  const raw = execSync(
+    `git log -n ${LIMIT} --pretty=format:%h%x1f%s%x1f%aI`,
+    { encoding: 'utf8' }
+  );
+  commits = raw
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .map(line => {
+      const [hash, subject, iso] = line.split('\x1f');
+      return { hash, subject, iso };
+    });
+} catch {
+  // no git, no history, no shame — render an empty placeholder
+}
+
+function relTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return '';
+  const s = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  if (s < 60)      return `${s}s ago`;
+  if (s < 3600)    return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400)   return `${Math.floor(s / 3600)}h ago`;
+  if (s < 604800)  return `${Math.floor(s / 86400)}d ago`;
+  if (s < 2592000) return `${Math.floor(s / 604800)}w ago`;
+  return `${Math.floor(s / 2592000)}mo ago`;
+}
 ---
 <section class="panel" data-tab="about" role="tabpanel">
   <h2>about</h2>
+
   {rows.map(r => (
     <div class="row">
       <div class="k">{r.k}</div>
@@ -20,4 +63,22 @@ const rows: { k: string; v: string | null }[] = [
     </div>
   ))}
   <p class="muted-note">// section under construction. fill it in.</p>
+
+  {commits.length > 0 && (
+    <div class="commits">
+      <div class="commits-label">commit history</div>
+      <pre class="commits-cmd">$ git log -n {LIMIT} --oneline</pre>
+      <ul class="commits-list">
+        {commits.map(c => (
+          <li>
+            <span class="hash">
+              <a href={`${REPO_URL}/commit/${c.hash}`} target="_blank" rel="noopener noreferrer">{c.hash}</a>
+            </span>
+            <span class="subject">{c.subject}</span>
+            <span class="when">{relTime(c.iso)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
 </section>

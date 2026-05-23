@@ -197,6 +197,76 @@ main {
 .row .v          { color: var(--fg); }
 .row .v .todo    { color: var(--muted); font-style: italic; }
 
+/* ────── commit history (about) ────── */
+.commits {
+  margin-top: 44px;
+  max-width: 72ch;
+}
+.commits-label {
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.commits-label::before { content: "// "; color: var(--accent); }
+
+.commits-cmd {
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--muted);
+  background: transparent;
+  padding: 8px 0 6px;
+  border-top: 1px solid var(--line);
+  margin: 0;
+  white-space: pre-wrap;
+}
+.commits-cmd::before { content: "› "; color: var(--accent); }
+
+.commits-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.commits-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px dashed var(--line);
+  font-size: 13px;
+  align-items: baseline;
+  line-height: 1.4;
+}
+.commits-list li:last-child { border-bottom: 1px solid var(--line); }
+.commits-list .hash {
+  color: var(--accent);
+  font-weight: 500;
+}
+.commits-list .hash::before { content: "["; color: var(--muted); }
+.commits-list .hash::after  { content: "]"; color: var(--muted); }
+.commits-list .hash a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color .2s;
+}
+.commits-list .hash a:hover { border-bottom-color: var(--accent); }
+.commits-list .subject { color: var(--fg); overflow: hidden; text-overflow: ellipsis; }
+.commits-list .when {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .commits-list li        { grid-template-columns: auto 1fr; gap: 8px 12px; }
+  .commits-list .when     { grid-column: 2; font-size: 9px; }
+  .commits-list .subject  { grid-column: 2; }
+}
+
 /* contact links */
 .links { max-width: 64ch; margin-top: 4px; }
 .links a {
