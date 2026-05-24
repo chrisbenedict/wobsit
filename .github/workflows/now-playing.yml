@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # required for the trigger-deploy step. `gh workflow run` calls the
+      # workflow_dispatch endpoint, which needs actions:write.
+      actions: write
     steps:
       - uses: actions/checkout@v4
 
@@ -31,6 +34,7 @@ jobs:
         run: node scripts/update-now-playing.mjs
 
       - name: commit if changed
+        id: commit
         run: |
           if [[ -n "$(git status --porcelain public/now-playing.json)" ]]; then
             git config user.name  'github-actions[bot]'
@@ -38,6 +42,18 @@ jobs:
             git add public/now-playing.json
             git commit -m 'now-playing: update'
             git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "no diff"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
+
+      # GitHub's safety rule: commits made with the default GITHUB_TOKEN
+      # don't trigger other workflows (no recursion). workflow_dispatch is
+      # the documented exception — so we dispatch deploy.yml explicitly
+      # whenever the now-playing data actually changed.
+      - name: trigger deploy on change
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run deploy.yml --ref main
