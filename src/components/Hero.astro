@@ -1,0 +1,10 @@
+---
+interface Props {
+  name?: string;
+}
+const { name = 'chris benedict' } = Astro.props;
+---
+<div class="hero">
+  <h1>{name}<span class="caret" aria-hidden="true"></span></h1>
+  <div class="sub">// personal site &nbsp;·&nbsp; v<b id="ver">0.0</b></div>
+</div>

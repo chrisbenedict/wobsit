@@ -1,0 +1,8 @@
+# CODEOWNERS for chrisbenedict.me
+# docs: https://docs.github.com/articles/about-codeowners
+#
+# Every path in this repo is owned by @chrisbenedict. With branch protection
+# set to "Require review from Code Owners", any PR touching anything below
+# requires an approval from @chrisbenedict before merging.
+
+* @chrisbenedict

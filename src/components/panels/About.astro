@@ -1,0 +1,114 @@
+---
+import { readFileSync, existsSync } from 'node:fs';
+
+// ──────── about rows ────────
+const rows: { k: string; v: string | null }[] = [
+  { k: 'name',    v: 'chris benedict' },
+  { k: 'based',   v: null },
+  { k: 'doing',   v: null },
+  { k: 'into',    v: null },
+  { k: 'reading', v: null },
+];
+
+// ──────── contributions heatmap ────────
+// reads src/data/contributions.json (refreshed at build time by
+// scripts/fetch-contributions.mjs — see .github/workflows/deploy.yml)
+type Day  = { c: number; l: 0 | 1 | 2 | 3 | 4; d: string };
+type Data = { total: number; weeks: Day[][]; fetched_at: string; source: string };
+
+let contrib: Data | null = null;
+const dataPath = 'src/data/contributions.json';
+if (existsSync(dataPath)) {
+  try { contrib = JSON.parse(readFileSync(dataPath, 'utf8')); } catch {}
+}
+
+// derive month labels positioned by the column they start in.
+const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+let monthLabels: { col: number; label: string }[] = [];
+if (contrib) {
+  let prev = -1;
+  contrib.weeks.forEach((week, idx) => {
+    const first = week[0];
+    if (!first) return;
+    const m = new Date(first.d).getUTCMonth();
+    if (m !== prev) {
+      monthLabels.push({ col: idx + 1, label: MONTHS[m] });
+      prev = m;
+    }
+  });
+  // drop the first label if it'd sit on top of the first column of the prior month's tail
+  if (monthLabels.length > 1 && monthLabels[0].col < 2) monthLabels = monthLabels.slice(1);
+}
+
+const startDate = contrib?.weeks[0]?.[0]?.d;
+const endDate   = contrib ? (() => {
+  const lastWeek = contrib.weeks[contrib.weeks.length - 1];
+  return lastWeek[lastWeek.length - 1]?.d;
+})() : null;
+
+function fmtRange(a?: string, b?: string | null): string {
+  if (!a || !b) return '';
+  const fa = new Date(a), fb = new Date(b);
+  const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${m[fa.getUTCMonth()]} ${fa.getUTCFullYear()} → ${m[fb.getUTCMonth()]} ${fb.getUTCFullYear()}`;
+}
+---
+<section class="panel" data-tab="about" role="tabpanel">
+  <h2>about</h2>
+
+  {rows.map(r => (
+    <div class="row">
+      <div class="k">{r.k}</div>
+      <div class="v">
+        {r.v ? r.v : <span class="todo">— tbd —</span>}
+      </div>
+    </div>
+  ))}
+  <p class="muted-note">// section under construction. fill it in.</p>
+
+  {contrib && (
+    <div class="contrib">
+      <div class="contrib-head">
+        <div class="contrib-label">git activity</div>
+        <div class="contrib-range">{fmtRange(startDate, endDate)}</div>
+      </div>
+
+      <div class="contrib-summary">
+        <span class="contrib-total"><b>{contrib.total.toLocaleString()}</b> contributions in the last year</span>
+        <span class="contrib-legend">
+          <span class="contrib-legend-label">less</span>
+          <span class="contrib-cell level-0" aria-hidden="true"></span>
+          <span class="contrib-cell level-1" aria-hidden="true"></span>
+          <span class="contrib-cell level-2" aria-hidden="true"></span>
+          <span class="contrib-cell level-3" aria-hidden="true"></span>
+          <span class="contrib-cell level-4" aria-hidden="true"></span>
+          <span class="contrib-legend-label">more</span>
+        </span>
+      </div>
+
+      <div class="contrib-scroll">
+        <div class="contrib-months" style={`--cols: ${contrib.weeks.length}`}>
+          {monthLabels.map(m => (
+            <span class="contrib-month" style={`grid-column: ${m.col}`}>{m.label}</span>
+          ))}
+        </div>
+        <div
+          class="contrib-grid"
+          role="img"
+          aria-label={`${contrib.total} GitHub contributions in the last year`}
+        >
+          {contrib.weeks.map(week => (
+            <div class="contrib-col">
+              {week.map(day => (
+                <span
+                  class={`contrib-cell level-${day.l}`}
+                  title={`${day.c} contribution${day.c === 1 ? '' : 's'} · ${day.d}`}
+                ></span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )}
+</section>

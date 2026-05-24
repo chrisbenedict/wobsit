@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import Frame from '../components/Frame.astro';
+import TopBar from '../components/TopBar.astro';
+import Hero from '../components/Hero.astro';
+import SiteNav from '../components/SiteNav.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import NowPlaying from '../components/NowPlaying.astro';
+import Home from '../components/panels/Home.astro';
+import About from '../components/panels/About.astro';
+import Contact from '../components/panels/Contact.astro';
+---
+<Base>
+  <Frame>
+    <TopBar />
+    <Hero />
+    <SiteNav />
+    <main>
+      <Home />
+      <About />
+      <Contact />
+    </main>
+    <NowPlaying />
+    <SiteFooter />
+  </Frame>
+</Base>
+
+<script>
+  import '../scripts/site.js';
+</script>
