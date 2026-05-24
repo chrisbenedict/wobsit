@@ -13,8 +13,12 @@
   setInterval(tick, 1000);
 
   // ──────── timezone as "location" ────────
+  // the IANA tz database uses America/Los_Angeles for the whole US Pacific
+  // zone (SF, LA, San Diego, etc.) — display the SF label since that's
+  // where the site owner lives.
   try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    let tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    if (tz === 'America/Los_Angeles') tz = 'America/San_Francisco';
     const loc = document.getElementById('loc');
     if (loc && tz) loc.textContent = tz.replace(/_/g, ' ').toLowerCase();
   } catch (_) { /* swallow */ }

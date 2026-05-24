@@ -11,27 +11,38 @@
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-const USER  = 'chrisbenedict';
-const OUT   = 'src/data/contributions.json';
-const TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
+const USER   = 'chrisbenedict';
+const OUT    = 'src/data/contributions.json';
+const TOKEN  = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
+const MONTHS = 3;     // how far back the heatmap goes
 
 function ensureDir(p) {
   const d = dirname(p);
   if (!existsSync(d)) mkdirSync(d, { recursive: true });
 }
 
+function rangeFrom() {
+  const from = new Date();
+  from.setMonth(from.getMonth() - MONTHS);
+  // snap to start of the week (Sunday) so the grid aligns
+  from.setDate(from.getDate() - from.getDay());
+  from.setHours(0, 0, 0, 0);
+  return from;
+}
+
 function sample() {
   // deterministic-ish sample so local dev shows the heatmap.
   const today = new Date();
-  const start = new Date(today);
-  start.setDate(start.getDate() - 364 - start.getDay()); // back to Sunday, ~52 weeks
+  const start = rangeFrom();
+  const totalDays = Math.ceil((today.getTime() - start.getTime()) / 86400000);
+  const totalWeeks = Math.ceil(totalDays / 7);
 
   let seed = 1234567;
   const rand = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
 
   const weeks = [];
   let total = 0;
-  for (let w = 0; w < 53; w++) {
+  for (let w = 0; w < totalWeeks; w++) {
     const week = [];
     for (let d = 0; d < 7; d++) {
       const date = new Date(start);
@@ -48,7 +59,7 @@ function sample() {
       total += count;
       week.push({ c: count, l: level, d: date.toISOString().slice(0, 10) });
     }
-    weeks.push(week);
+    if (week.length) weeks.push(week);
   }
 
   return { total, weeks, fetched_at: new Date().toISOString(), source: 'sample' };
@@ -56,9 +67,9 @@ function sample() {
 
 async function real() {
   const query = `
-    query($login: String!) {
+    query($login: String!, $from: DateTime!, $to: DateTime!) {
       user(login: $login) {
-        contributionsCollection {
+        contributionsCollection(from: $from, to: $to) {
           contributionCalendar {
             totalContributions
             weeks {
@@ -74,6 +85,14 @@ async function real() {
     }
   `;
 
+  const from = rangeFrom();
+  const to = new Date();
+  const variables = {
+    login: USER,
+    from: from.toISOString(),
+    to: to.toISOString(),
+  };
+
   const r = await fetch('https://api.github.com/graphql', {
     method: 'POST',
     headers: {
@@ -81,7 +100,7 @@ async function real() {
       'Content-Type': 'application/json',
       'User-Agent': 'chrisbenedict.me-build',
     },
-    body: JSON.stringify({ query, variables: { login: USER } }),
+    body: JSON.stringify({ query, variables }),
   });
 
   if (!r.ok) {

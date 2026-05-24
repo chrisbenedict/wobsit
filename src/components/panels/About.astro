@@ -74,7 +74,7 @@ function fmtRange(a?: string, b?: string | null): string {
       </div>
 
       <div class="contrib-summary">
-        <span class="contrib-total"><b>{contrib.total.toLocaleString()}</b> contributions in the last year</span>
+        <span class="contrib-total"><b>{contrib.total.toLocaleString()}</b> contributions in the last 3 months</span>
         <span class="contrib-legend">
           <span class="contrib-legend-label">less</span>
           <span class="contrib-cell level-0" aria-hidden="true"></span>
@@ -95,7 +95,7 @@ function fmtRange(a?: string, b?: string | null): string {
         <div
           class="contrib-grid"
           role="img"
-          aria-label={`${contrib.total} GitHub contributions in the last year`}
+          aria-label={`${contrib.total} GitHub contributions in the last 3 months`}
         >
           {contrib.weeks.map(week => (
             <div class="contrib-col">
