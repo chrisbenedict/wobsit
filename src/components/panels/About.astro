@@ -52,6 +52,27 @@ function fmtRange(a?: string, b?: string | null): string {
   const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return `${m[fa.getUTCMonth()]} ${fa.getUTCFullYear()} → ${m[fb.getUTCMonth()]} ${fb.getUTCFullYear()}`;
 }
+
+// derived from the actual data — stays accurate if the fetch window changes
+// (and gracefully degrades for partial windows). returns strings like
+// "last 5 days", "last 3 weeks", "last 6 months", "last year".
+function fmtPeriod(a?: string, b?: string | null): string {
+  if (!a || !b) return '';
+  const days = Math.max(1, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
+  if (days < 14) return `last ${days} day${days === 1 ? '' : 's'}`;
+  if (days < 60) {
+    const w = Math.max(1, Math.round(days / 7));
+    return `last ${w} week${w === 1 ? '' : 's'}`;
+  }
+  if (days < 365) {
+    const mo = Math.max(1, Math.round(days / 30));
+    return `last ${mo} month${mo === 1 ? '' : 's'}`;
+  }
+  const y = Math.max(1, Math.round(days / 365));
+  return `last ${y} year${y === 1 ? '' : 's'}`;
+}
+
+const periodLabel = fmtPeriod(startDate, endDate);
 ---
 <section class="panel" data-tab="about" role="tabpanel">
   <h2>about</h2>
@@ -74,7 +95,7 @@ function fmtRange(a?: string, b?: string | null): string {
       </div>
 
       <div class="contrib-summary">
-        <span class="contrib-total"><b>{contrib.total.toLocaleString()}</b> contributions in the last 3 months</span>
+        <span class="contrib-total"><b>{contrib.total.toLocaleString()}</b> contributions in the {periodLabel}</span>
         <span class="contrib-legend">
           <span class="contrib-legend-label">less</span>
           <span class="contrib-cell level-0" aria-hidden="true"></span>
@@ -95,7 +116,7 @@ function fmtRange(a?: string, b?: string | null): string {
         <div
           class="contrib-grid"
           role="img"
-          aria-label={`${contrib.total} GitHub contributions in the last 3 months`}
+          aria-label={`${contrib.total} GitHub contributions in the ${periodLabel}`}
         >
           {contrib.weeks.map(week => (
             <div class="contrib-col">
