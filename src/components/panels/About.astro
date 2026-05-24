@@ -55,21 +55,30 @@ function fmtRange(a?: string, b?: string | null): string {
 
 // derived from the actual data — stays accurate if the fetch window changes
 // (and gracefully degrades for partial windows). returns strings like
-// "last 5 days", "last 3 weeks", "last 6 months", "last year".
+// "yesterday", "last 5 days", "last week", "last 3 weeks", "last month",
+// "last 6 months", "last year", "last 2 years". returns '' on invalid input
+// so callers can drop the phrase rather than render "last NaN years".
 function fmtPeriod(a?: string, b?: string | null): string {
   if (!a || !b) return '';
-  const days = Math.max(1, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
-  if (days < 14) return `last ${days} day${days === 1 ? '' : 's'}`;
-  if (days < 60) {
-    const w = Math.max(1, Math.round(days / 7));
-    return `last ${w} week${w === 1 ? '' : 's'}`;
-  }
-  if (days < 365) {
-    const mo = Math.max(1, Math.round(days / 30));
-    return `last ${mo} month${mo === 1 ? '' : 's'}`;
-  }
-  const y = Math.max(1, Math.round(days / 365));
-  return `last ${y} year${y === 1 ? '' : 's'}`;
+  const ta = new Date(a).getTime();
+  const tb = new Date(b).getTime();
+  if (Number.isNaN(ta) || Number.isNaN(tb) || tb < ta) return '';
+
+  const days = Math.max(1, Math.round((tb - ta) / 86400000));
+  if (days < 2)  return 'yesterday';
+  if (days < 14) return `last ${days} days`;
+
+  const weeks = Math.round(days / 7);
+  if (weeks < 2) return 'last week';
+  if (days < 60) return `last ${weeks} weeks`;
+
+  const months = Math.round(days / 30);
+  if (months < 2) return 'last month';
+  if (days < 365) return `last ${months} months`;
+
+  const years = Math.round(days / 365);
+  if (years < 2) return 'last year';
+  return `last ${years} years`;
 }
 
 const periodLabel = fmtPeriod(startDate, endDate);
@@ -95,7 +104,7 @@ const periodLabel = fmtPeriod(startDate, endDate);
       </div>
 
       <div class="contrib-summary">
-        <span class="contrib-total"><b>{contrib.total.toLocaleString()}</b> contributions in the {periodLabel}</span>
+        <span class="contrib-total"><b>{contrib.total.toLocaleString()}</b> contributions{periodLabel && ` in the ${periodLabel}`}</span>
         <span class="contrib-legend">
           <span class="contrib-legend-label">less</span>
           <span class="contrib-cell level-0" aria-hidden="true"></span>
@@ -116,7 +125,9 @@ const periodLabel = fmtPeriod(startDate, endDate);
         <div
           class="contrib-grid"
           role="img"
-          aria-label={`${contrib.total} GitHub contributions in the ${periodLabel}`}
+          aria-label={periodLabel
+            ? `${contrib.total} GitHub contributions in the ${periodLabel}`
+            : `${contrib.total} GitHub contributions`}
         >
           {contrib.weeks.map(week => (
             <div class="contrib-col">
