@@ -198,9 +198,12 @@ main {
 .row .v .todo    { color: var(--muted); font-style: italic; }
 
 /* ────── github contributions heatmap (about) ────── */
+/* same width as `.row` above so the dashed lines, legend, and grid
+   line up flush with the about table. otherwise the heatmap sprawls
+   wider than the rest of the panel and looks unmoored. */
 .contrib {
   margin-top: 44px;
-  max-width: 100%;
+  max-width: 64ch;
 }
 .contrib-head {
   display: flex;
