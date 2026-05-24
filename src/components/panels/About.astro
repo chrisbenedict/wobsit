@@ -55,30 +55,35 @@ function fmtRange(a?: string, b?: string | null): string {
 
 // derived from the actual data — stays accurate if the fetch window changes
 // (and gracefully degrades for partial windows). returns strings like
-// "yesterday", "last 5 days", "last week", "last 3 weeks", "last month",
-// "last 6 months", "last year", "last 2 years". returns '' on invalid input
-// so callers can drop the phrase rather than render "last NaN years".
+// "last 7 days", "last 2 weeks", "last month", "last 3 months",
+// "last year", "last 2 years". returns '' on invalid input so callers
+// can drop the phrase rather than render "last NaN years".
 function fmtPeriod(a?: string, b?: string | null): string {
   if (!a || !b) return '';
   const ta = new Date(a).getTime();
   const tb = new Date(b).getTime();
   if (Number.isNaN(ta) || Number.isNaN(tb) || tb < ta) return '';
 
-  const days = Math.max(1, Math.round((tb - ta) / 86400000));
-  if (days < 2)  return 'yesterday';
-  if (days < 14) return `last ${days} days`;
+  // both endpoints inclusive — a calendar covering 7 days should report 7,
+  // not 6 (which is the raw rounded ms-diff between the two boundary dates).
+  const days = Math.round((tb - ta) / 86400000) + 1;
 
-  const weeks = Math.round(days / 7);
-  if (weeks < 2) return 'last week';
-  if (days < 60) return `last ${weeks} weeks`;
+  if (days < 14) return `last ${days} day${days === 1 ? '' : 's'}`;
 
-  const months = Math.round(days / 30);
-  if (months < 2) return 'last month';
-  if (days < 365) return `last ${months} months`;
+  // sub-month windows: report in weeks. month branch takes over at 28d so
+  // a ~30-day window lands on "last month", not "last 4 weeks".
+  if (days < 28) {
+    const weeks = Math.round(days / 7);
+    return weeks < 2 ? 'last week' : `last ${weeks} weeks`;
+  }
+
+  if (days < 365) {
+    const months = Math.round(days / 30);
+    return months < 2 ? 'last month' : `last ${months} months`;
+  }
 
   const years = Math.round(days / 365);
-  if (years < 2) return 'last year';
-  return `last ${years} years`;
+  return years < 2 ? 'last year' : `last ${years} years`;
 }
 
 const periodLabel = fmtPeriod(startDate, endDate);
