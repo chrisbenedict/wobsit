@@ -1,6 +1,9 @@
 ---
+import { buildStamp, touchedStamp } from '../lib/build-info.ts';
 ---
 <footer>
-  <div class="status">// built <span id="build">—</span> &nbsp;·&nbsp; last touched <span id="touched">—</span></div>
-  <div class="keys"><b>[1]</b>home<span></span><b>[2]</b>about<span></span><b>[3]</b>contact</div>
+  <div class="status">// built <span id="build">{buildStamp}</span> &nbsp;·&nbsp; last touched <span id="touched">{touchedStamp}</span></div>
+  <nav class="keys" aria-label="sections">
+    <a href="#home"><b>[1]</b>home</a><a href="#about"><b>[2]</b>about</a><a href="#contact"><b>[3]</b>contact</a>
+  </nav>
 </footer>

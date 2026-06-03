@@ -2,39 +2,38 @@
 // imported by src/pages/index.astro. Astro bundles + hashes this automatically.
 
 (function () {
-  // ──────── live clock ────────
+  // ──────── live clock — always America/San_Francisco ────────
+  // the site owner lives in SF, so the header clock shows *their* local time
+  // (labeled in the topbar), not the visitor's. America/Los_Angeles is the
+  // IANA identifier for the US Pacific zone that SF sits in.
+  const TZ = 'America/Los_Angeles';
+  const fmt = new Intl.DateTimeFormat('en-GB', {
+    timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  });
   function tick() {
-    const d = new Date();
-    const t = d.toTimeString().slice(0, 8);
-    const el = document.getElementById('time');
-    if (el) el.textContent = t + ' local';
+    setText('time', fmt.format(new Date()));
   }
   tick();
   setInterval(tick, 1000);
 
-  // ──────── timezone as "location" ────────
-  // the IANA tz database uses America/Los_Angeles for the whole US Pacific
-  // zone — keep `tz` as the real identifier (in case anything else needs it
-  // later), but render a SF label since that's where the site owner lives.
-  // Other zones display whatever Intl returns, unchanged.
-  try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-    const displayLabels = {
-      'America/Los_Angeles': 'America/San_Francisco',
-    };
-    const label = displayLabels[tz] || tz;
-    const loc = document.getElementById('loc');
-    if (loc && label) loc.textContent = label.replace(/_/g, ' ').toLowerCase();
-  } catch (_) { /* swallow */ }
-
-  // ──────── build / touched / version ────────
-  const now = new Date();
-  const yy = String(now.getFullYear()).slice(2);
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
-  setText('build',   `${yy}.${mm}.${dd}`);
-  setText('touched', now.toISOString().slice(0, 10));
-  setText('ver',     `0.${yy}.${mm}`);
+  // ──────── name typing animation (first paint only) ────────
+  // type the header name out letter by letter. honors reduced-motion by
+  // rendering the full name immediately. the name is in the HTML for no-JS /
+  // crawlers; we clear and retype it here.
+  (function typeName() {
+    const el = document.querySelector('.hero .name-text');
+    if (!el) return;
+    const full = el.dataset.text || el.textContent || '';
+    const reduce = window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || !full) { el.textContent = full; return; }
+    el.textContent = '';
+    let i = 0;
+    (function step() {
+      el.textContent = full.slice(0, i);
+      if (i++ < full.length) setTimeout(step, 85);
+    })();
+  })();
 
   // ──────── tab routing ────────
   const tabs = Array.from(document.querySelectorAll('nav.tabs button'));
