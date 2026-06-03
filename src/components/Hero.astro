@@ -1,10 +1,12 @@
 ---
+import { version } from '../lib/build-info.ts';
+
 interface Props {
   name?: string;
 }
 const { name = 'chris benedict' } = Astro.props;
 ---
 <div class="hero">
-  <h1>{name}<span class="caret" aria-hidden="true"></span></h1>
-  <div class="sub">// personal site &nbsp;·&nbsp; v<b id="ver">0.0</b></div>
+  <p class="name"><span class="name-text" data-text={name}>{name}</span><span class="caret" aria-hidden="true"></span></p>
+  <div class="sub">// personal site &nbsp;·&nbsp; v<b id="ver">{version}</b></div>
 </div>
