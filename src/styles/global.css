@@ -389,7 +389,7 @@ footer .keys a:hover { color: var(--fg); }
   .crop.se::after                      { bottom: 6px; right: 6px; }
   .topbar                              { font-size: 10px; grid-template-columns: 1fr 1fr; }
   .topbar > *                          { padding: 8px 10px; }
-  /* tight row — drop the seconds clock, keep the SF label so the host
+  /* tight row — hide the clock entirely, keep the SF label so the host
      name stays readable (matches the pre-merge mobile topbar). */
   .topbar #time                        { display: none; }
   .hero                                { padding: 36px 18px 22px; }
