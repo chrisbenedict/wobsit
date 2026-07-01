@@ -1,7 +1,7 @@
 {
-  "playing": false,
-  "title": "Some Day I Will",
-  "artist": "Barry Can't Swim, hawi",
-  "played_at": "2026-07-01T15:00:09.966Z",
-  "updated_at": "2026-07-01T15:24:43.124Z"
+  "playing": true,
+  "title": "Because I Wanted You to Know",
+  "artist": "Barry Can't Swim",
+  "played_at": null,
+  "updated_at": "2026-07-01T20:10:06.950Z"
 }
