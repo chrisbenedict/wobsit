@@ -2,12 +2,20 @@
 import { readFileSync, existsSync } from 'node:fs';
 
 // ──────── about rows ────────
+// `listening` is the most recently played track, read at build time from
+// public/now-playing.json (refreshed by the now-playing workflow). degrades
+// to "— tbd —" if the feed is missing.
+let listening: string | null = null;
+try {
+  const np = JSON.parse(readFileSync('public/now-playing.json', 'utf8'));
+  if (np && np.title) listening = np.artist ? `${np.title} · ${np.artist}` : np.title;
+} catch {}
+
 const rows: { k: string; v: string | null }[] = [
-  { k: 'name',    v: 'chris benedict' },
-  { k: 'based',   v: null },
-  { k: 'doing',   v: null },
-  { k: 'into',    v: null },
-  { k: 'reading', v: null },
+  { k: 'name',      v: 'chris benedict' },
+  { k: 'based',     v: 'San Francisco Bay Area' },
+  { k: 'doing',     v: 'Security Stuff' },
+  { k: 'listening', v: listening },
 ];
 
 // ──────── contributions heatmap ────────
@@ -99,7 +107,6 @@ const periodLabel = fmtPeriod(startDate, endDate);
       </div>
     </div>
   ))}
-  <p class="muted-note">// section under construction. fill it in.</p>
 
   {contrib && (
     <div class="contrib">

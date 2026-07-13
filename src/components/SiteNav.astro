@@ -16,4 +16,5 @@ const tabs = [
       <span class="key">[{t.key}]</span>{t.name}
     </button>
   ))}
+  <span class="folio" id="folio" aria-hidden="true">01&thinsp;/&thinsp;{String(tabs.length).padStart(2, '0')}</span>
 </nav>
