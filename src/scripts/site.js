@@ -44,6 +44,12 @@
     if (!names.includes(name)) return;
     tabs.forEach(t => t.setAttribute('aria-selected', t.dataset.tab === name ? 'true' : 'false'));
     panels.forEach(p => { p.dataset.active = (p.dataset.tab === name) ? 'true' : 'false'; });
+    // folio — page-number style "02 / 03" in the tab strip
+    const folio = document.getElementById('folio');
+    if (folio) {
+      const n = String(names.indexOf(name) + 1).padStart(2, '0');
+      folio.textContent = `${n} / ${String(names.length).padStart(2, '0')}`;
+    }
     if (history.replaceState) history.replaceState(null, '', '#' + name);
   }
   tabs.forEach(t => t.addEventListener('click', () => setTab(t.dataset.tab)));

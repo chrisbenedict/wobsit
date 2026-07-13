@@ -35,11 +35,8 @@ function commitDateParts(): { yyyy: string; mm: string; dd: string } {
   };
 }
 
-const { yyyy, mm, dd } = commitDateParts();
+const { yyyy, mm } = commitDateParts();
 const yy = yyyy.slice(2);
 
-// `built` mirrors the old yy.mm.dd stamp; `touched` keeps the ISO form.
-// both derive from the same commit so they stay in step with git activity.
-export const buildStamp = `${yy}.${mm}.${dd}`;
-export const touchedStamp = `${yyyy}-${mm}-${dd}`;
+// version tracks the commit's year.month so it bumps with real git activity.
 export const version = `0.${yy}.${mm}`;
