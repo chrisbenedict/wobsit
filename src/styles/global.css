@@ -102,18 +102,17 @@ body::before {
   line-height: 0.95;
   text-transform: lowercase;
 }
-/* thin red cursor mark — slow blink, kept quiet */
+/* thin red rule after the name — static, no blink. reads as a registration
+   mark (echoes the "+" crop ticks) rather than a blinking terminal cursor. */
 .hero .name .caret {
   display: inline-block;
-  width: 0.08em;
+  width: 0.06em;
   height: 0.72em;
   background: var(--accent);
   vertical-align: -0.02em;
-  margin-left: 0.18em;
+  margin-left: 0.16em;
   opacity: 0.9;
-  animation: blink 2.4s steps(1) infinite;
 }
-@keyframes blink { 50% { opacity: 0; } }
 
 .hero .sub {
   margin-top: 20px;
@@ -438,7 +437,6 @@ footer .keys a:hover { color: var(--fg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero .name .caret           { animation: none; }
   .panel[data-active="true"]   { animation: none; }
   .links a .arrow              { transition: none; }
   .now[data-state="live"] .spotify-mark { animation: none; }

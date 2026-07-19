@@ -16,22 +16,51 @@
   tick();
   setInterval(tick, 1000);
 
-  // ──────── name typing animation (first paint only) ────────
-  // type the header name out letter by letter. honors reduced-motion by
-  // rendering the full name immediately. the name is in the HTML for no-JS /
-  // crawlers; we clear and retype it here.
-  (function typeName() {
+  // ──────── name reveal (first paint only) ────────
+  // the name resolves into place instead of typing at a flat cadence. each
+  // letter flickers a stray glyph for a beat, then lands — like a registration
+  // mark settling into alignment. timing is deliberately uneven: quicker on
+  // letters, a breath before the space, a longer settle before the surname.
+  // honors reduced-motion by rendering the full name immediately. the name is
+  // in the HTML for no-JS / crawlers; we clear and resolve it here.
+  (function revealName() {
     const el = document.querySelector('.hero .name-text');
     if (!el) return;
     const full = el.dataset.text || el.textContent || '';
     const reduce = window.matchMedia
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce || !full) { el.textContent = full; return; }
+
+    // glyphs that flicker in before each real character lands. drawn from the
+    // site's own vocabulary (registration marks, box drawing, the accent "+").
+    const GLYPHS = '+×·—|/\\_#%&@$§¶°';
+    const rand = (n) => Math.floor(Math.random() * n);
+
+    // human-ish per-character delay. base cadence with jitter, stretched before
+    // the space and the first letter of the surname so the reveal breathes.
+    function delayFor(i) {
+      const ch = full[i];
+      const prev = full[i - 1];
+      let d = 46 + rand(72);                       // base 46–118ms
+      if (prev === ' ') d += 90 + rand(60);        // settle after the gap
+      if (ch === ' ') d = 60;                      // the space itself is quick
+      if (i > 0 && full[i - 1] === ' ') d += 40;   // lean into a new word
+      return d;
+    }
+
     el.textContent = '';
     let i = 0;
     (function step() {
-      el.textContent = full.slice(0, i);
-      if (i++ < full.length) setTimeout(step, 85);
+      if (i >= full.length) { el.textContent = full; return; }
+      const done = full.slice(0, i);
+      const ch = full[i];
+      // one flicker frame of a stray glyph, then the real character lands.
+      el.textContent = done + (ch === ' ' ? ' ' : GLYPHS[rand(GLYPHS.length)]);
+      setTimeout(() => {
+        el.textContent = done + ch;
+        i++;
+        setTimeout(step, delayFor(i));
+      }, 34 + rand(38));                            // glyph visible 34–72ms
     })();
   })();
 
